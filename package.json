@@ -1,0 +1,23 @@
+{
+  "name": "react-grid-saeta-ui",
+  "version": "1.0.0",
+  "description": "Tabla dinámica para react",
+  "main": "index.js",
+  "directories": {
+    "example": "example"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sirsaeta/react-grid-saeta-ui.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sirsaeta/react-grid-saeta-ui/issues"
+  },
+  "homepage": "https://github.com/sirsaeta/react-grid-saeta-ui#readme"
+}
