@@ -1,16 +1,17 @@
 import { CustomGridHead, CustomGridBody, CustomToolbar, CustomGridSubFooter } from "./index"
 import { Paper, TableContainer, Table, TablePagination, createStyles, makeStyles } from '@material-ui/core';
-import { Order, PropsCustomGrid } from "./types"
+import { FilterRowsProps, Order, PropsCustomGrid } from "./types"
 import React from "react";
+import { filterRows, filterRowsExport } from "./Funtions";
 
 const useStyles = makeStyles(() =>
-  createStyles({
-    container: {
-		width:"92vw",
-	  	maxHeight: "70vh",
-		backgroundColor: 'transparent'
-    }
-  })
+	createStyles({
+		container: {
+			width: "92vw",
+			maxHeight: "70vh",
+			backgroundColor: 'transparent'
+		}
+	})
 );
 
 const CustomGrid = (props: PropsCustomGrid) => {
@@ -22,24 +23,25 @@ const CustomGrid = (props: PropsCustomGrid) => {
 		changePage && changePage(newPage);
 		setPage(newPage);
 	};
-	
+
 	const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setRowsPerPage(parseInt(event.target.value, 10));
 		setPage(0);
 	};
-	
-	const [filterKey, setFilterKey] = React.useState("");
-	const [filterValue, setFilterValue] = React.useState("");
-	const [filterType, setFilterType] = React.useState("like");
-	const [filterValueTo, setFilterValueTo] = React.useState("");
-	
-	const handleChangeFiltersRows = (column :string, value :string, type: string, valueTo: string) => {
-		setFilterKey(column);
-		setFilterValue(value);
-		setFilterType(type);
-		setFilterValueTo(valueTo)
+	let sampleFilters: FilterRowsProps = {
+		id: 0,
+		key: "",
+		value: "",
+		type: "like",
+		valueTo: ""
 	};
-	
+
+	const [filters, setFilters] = React.useState([sampleFilters]);
+
+	const handleChangeFiltersRows = (filtersData: FilterRowsProps[]) => {
+		setFilters(filtersData.filter((f: FilterRowsProps) => f.key !== '' && f.value !== ''));
+	};
+
 	const [order, setOrder] = React.useState<Order>(orderDefault || 'asc');
 	const [orderBy, setOrderBy] = React.useState<string>(orderByDefault || cellsHead[0].field);
 
@@ -48,18 +50,35 @@ const CustomGrid = (props: PropsCustomGrid) => {
 		setOrder(isAsc ? 'desc' : 'asc');
 		setOrderBy(property);
 	};
-	
-	return(
+
+	let data = [...rowsBody];
+	if (filters && filters?.length > 0)
+		filters.map((fr) =>
+			data = data.filter((row) => filterRows(row, fr))
+		)
+
+	let dataExport: any[] = (toolbarProps && toolbarProps.exportProps.data) ? [...toolbarProps.exportProps.data] : [];
+	if (filters && filters?.length > 0)
+		filters.map((fr) =>
+			dataExport = dataExport.filter((row) => filterRowsExport(row, fr))
+		)
+
+	return (
 		<div className={`customGrid`}>
-			{toolbarProps && <CustomToolbar {...toolbarProps} handleChangeFiltersRows={handleChangeFiltersRows} />}
-			<TableContainer 
-			{...containerProps} 
-			className={classes.container} 
-			component={(props: any) => <Paper variant={"outlined"} className={classes.container} {...props} elevation={2} />}>
-				<Table 
-				{...tableProps} 
-				style={{ minWidth: 650, whiteSpace:"nowrap" }} 
-				aria-label="simple table">
+			{toolbarProps && <CustomToolbar {...toolbarProps}
+				exportProps={{
+					...toolbarProps.exportProps,
+					data: dataExport
+				}}
+				handleChangeFiltersRows={handleChangeFiltersRows} />}
+			<TableContainer
+				{...containerProps}
+				className={classes.container}
+				component={(props: any) => <Paper variant={"outlined"} className={classes.container} {...props} elevation={2} />}>
+				<Table
+					{...tableProps}
+					style={{ minWidth: 650, whiteSpace: "nowrap" }}
+					aria-label="simple table">
 					<CustomGridHead
 						columns={cellsHead}
 						order={order}
@@ -67,14 +86,14 @@ const CustomGrid = (props: PropsCustomGrid) => {
 						onRequestSort={handleRequestSort}
 					/>
 					<CustomGridBody
-						rows={rowsBody}
+						rows={data}
 						rowsPerPage={rowsPerPage}
 						page={page}
 						collapsible={collapsible}
 						columns={cellsHead}
 						order={order}
 						orderBy={orderBy}
-						filterRowsProps = {filterKey!=="" && filterValue!=="" && {key:filterKey,value:filterValue,type:filterType,valueTo:filterValueTo} || undefined}
+						filterRowsProps={filters || undefined}
 					/>
 					{rowsSubFooter &&
 						<CustomGridSubFooter
@@ -84,15 +103,15 @@ const CustomGrid = (props: PropsCustomGrid) => {
 				</Table>
 			</TableContainer>
 			{pageSize &&
-			<TablePagination
-				rowsPerPageOptions={rowsPerPageOptions || [5, 10, 25]}
-				component="div"
-				count={collapsible ? rowsBody.length/2 : rowsBody.length}
-				rowsPerPage={rowsPerPage}
-				page={page}
-				onPageChange={handleChangePage}
-				onRowsPerPageChange={handleChangeRowsPerPage}
-			/>}
+				<TablePagination
+					rowsPerPageOptions={rowsPerPageOptions || [5, 10, 25]}
+					component="div"
+					count={collapsible ? data.length / 2 : data.length}
+					rowsPerPage={rowsPerPage}
+					page={page}
+					onPageChange={handleChangePage}
+					onRowsPerPageChange={handleChangeRowsPerPage}
+				/>}
 		</div>
 	)
 }

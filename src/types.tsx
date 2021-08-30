@@ -23,7 +23,8 @@ export type FilterRowsProps = {
 	key: string,
 	value: string,
 	type?: string,
-	valueTo?: string
+	valueTo?: string,
+	id?: number
 }
 
 export type PropsRowSubFooter = {
@@ -33,18 +34,18 @@ export type PropsRowSubFooter = {
 
 export type PropsRowBody = {
 	rows: RowBody[],
-	page?: number, 
+	page?: number,
 	rowsPerPage?: number,
 	columns?: CellHead[],
-	filterRowsProps?: FilterRowsProps,
+	filterRowsProps?: FilterRowsProps[],
 	order: Order,
 	orderBy: string,
 	collapsible?: boolean
 }
 
 export type RowBody = {
-    cells: CellBody[]
-    tableRowProps?: TableRowProps
+	cells: CellBody[]
+	tableRowProps?: TableRowProps
 	style?: any
 	collapse?: boolean
 }
@@ -63,8 +64,8 @@ export type PropsGridHead = {
 }
 
 export type RowHead = {
-    cells: CellHead[]
-    tableRowProps?: TableRowProps
+	cells: CellHead[]
+	tableRowProps?: TableRowProps
 }
 
 export type CellHead = {

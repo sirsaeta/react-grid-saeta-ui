@@ -1,113 +1,91 @@
-import { FormControl, TextField, Select, InputLabel, MenuItem,DialogContent, Dialog, Grid } from '@material-ui/core';
+import { DialogContent, Dialog, Grid, IconButton } from '@material-ui/core';
 import { useState } from 'react';
-import { KeyboardDatePicker, MuiPickersUtilsProvider } from '@material-ui/pickers';
-import DateFnsUtils from '@date-io/date-fns';
-import moment from 'moment';
 import 'moment/locale/ar';
+import { FilterRowsProps } from './types';
+import AddIcon from '@material-ui/icons/Add';
+import FilterFields from './FilterFields';
 
-export default function FilterRows({open, handleClose, columns}:any) {
-    const [column, setColumn] = useState("");
-    const [type, setType] = useState("like");
-    const [value, setValue] = useState("");
-    const [valueTo, setValueTo] = useState("");
-    const handleChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-        setColumn(event.target.value as string);
+export default function FilterRows({ open, handleClose, columns }: any) {
+    const [filters, setFilters] = useState([{
+        id: 0,
+        key: "",
+        value: "",
+        type: "like",
+        valueTo: ""
+    }]);
+
+    const changeData = (position: number, dato: string, value: any) => {
+        let newFilter = [...filters];
+        let filter = {
+            ...filters[position]
+        }
+        switch (dato) {
+            case "key":
+                filter.key = value;
+                break;
+            case "type":
+                filter.type = value;
+                break;
+            case "value":
+                filter.value = value;
+                break;
+            case "valueTo":
+                filter.valueTo = value;
+                break;
+            default:
+                break;
+        }
+        newFilter.splice(position, 1, filter)
+        setFilters([...newFilter]);
+    }
+
+    const addRowFilters = () => {
+        setFilters([
+            ...filters,
+            {
+                id: filters.length,
+                key: "",
+                value: "",
+                type: "like",
+                valueTo: ""
+            }
+        ]);
     };
-    const handleChangeType = (event: React.ChangeEvent<{ value: unknown }>) => {
-        setType(event.target.value as string);
-    };
-    const handleChangeValue = (event: React.ChangeEvent<{ value: unknown }>) => {
-        setValue(event.target.value as string);
+
+    const dropRowFilters = (key: number) => {
+        setFilters([...filters.filter((x: FilterRowsProps) => x.id !== key)]);
     };
 
     const close = () => {
-        handleClose(column, value, type, valueTo);
+        handleClose(filters);
     }
-  return (
-    <div>
-      <Dialog open={open} onClose={close} aria-labelledby="form-dialog-title" maxWidth={"lg"} fullWidth>
-        <DialogContent>
-            <Grid container spacing={2}>
-                <Grid item xs={3}>
-                <FormControl fullWidth>
-                    <InputLabel id="demo-simple-select-label">Columns</InputLabel>
-                    <Select
-                    labelId="demo-simple-select-label"
-                    id="column"
-                    value={column}
-                    onChange={handleChange}
-                    autoWidth
-                    >
-                        <MenuItem value="">
-                            <em>None</em>
-                        </MenuItem>
-                        {
-                            columns.filter((element: any) => (element.key!=='actions' && element.hideFilterRow!==true)).map((element:any) => <MenuItem value={element.key} key={element.key}>{element.field}</MenuItem>)
-                        }
-                    </Select>
-                </FormControl>
-                </Grid>
-                <Grid item xs={3}>
-                <FormControl fullWidth>
-                    <InputLabel id="demo-simple-select-label">Type</InputLabel>
-                    <Select
-                    labelId="demo-simple-select-label"
-                    id="condition"
-                    value={type}
-                    onChange={handleChangeType}
-                    autoWidth
-                    >
-                        <MenuItem value="like">Contiene</MenuItem>
-                        <MenuItem value="fromTo">Desde/Hasta</MenuItem>
-                    </Select>
-                </FormControl>
-                </Grid>
-                <Grid item xs={type==='like' ? 6 : 3}>
-                <FormControl fullWidth>
-                    {
-                        type!=='like' ?
-                        <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                            <KeyboardDatePicker
-                            disableToolbar
-                            variant="inline"
-                            format="dd/MM/yyyy"
-                            margin="normal"
-                            id="value"
-                            value={moment(value).isValid() ? value : null}
-                            onChange={(e)=>setValue(e ? `${e.toISOString()}` : '')}
-                            KeyboardButtonProps={{
-                                'aria-label': 'change date',
-                            }}
-                            />
-                        </MuiPickersUtilsProvider>
-                        :
-                        <TextField id="value" value={value} onChange={handleChangeValue} label={"Value"} variant="filled" size="small" placeholder="Filter value" color="primary" />
-                    }
-                </FormControl>
-                </Grid>
-                {type!=='like' &&                    
-                <Grid item xs={3}>
-                    <FormControl fullWidth>
-                        <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                            <KeyboardDatePicker
-                            disableToolbar
-                            variant="inline"
-                            format="dd/MM/yyyy"
-                            margin="normal"
-                            id="valueTo"
-                            value={moment(valueTo).isValid() ? valueTo : null}
-                            onChange={(e)=>setValueTo(e ? `${e.toISOString()}` : '')}
-                            KeyboardButtonProps={{
-                                'aria-label': 'change date',
-                            }}
-                            />
-                        </MuiPickersUtilsProvider>
-                    </FormControl>
-                </Grid>
-                }
-            </Grid>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
+
+    return (
+        <div>
+            <Dialog open={open} onClose={close} aria-labelledby="form-dialog-title" maxWidth={"lg"} fullWidth>
+                <DialogContent>
+                    <Grid container spacing={1}>
+                        <Grid item xs={12}>
+                            {
+                                filters.map((f: FilterRowsProps) =>
+                                    <FilterFields
+                                        columns={columns}
+                                        drop={() => dropRowFilters(f.id || 0)}
+                                        data={f}
+                                        changeData={changeData}
+                                    />)
+                            }
+                        </Grid>
+                        <Grid item xs={12}>
+                            <IconButton color="primary" aria-label="add more filter"
+                                onClick={addRowFilters}
+                            >
+                                <AddIcon />
+                            </IconButton>
+                        </Grid>
+                    </Grid>
+                </DialogContent>
+            </Dialog>
+        </div>
+    );
 }
